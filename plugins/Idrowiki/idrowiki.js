@@ -17,7 +17,8 @@ exports.commands = [
 	"whereis",
 	"whodrops",
 	"anu",
-	"wmi"
+	"wmi",
+	"wii"
 ];
 
 var badWords = [
@@ -54,7 +55,7 @@ exports.whereis = {
 				if (map != false) {
 					user.putQueue("whereis", map);
 					parseArray(map, function(index, data){return "\n"+Config.commandPrefix+"wmi "+index+" => "+data['kROName'];}, function(str){
-						msg.channel.sendMessage(msg.author.toString()+ ' List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\n untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/monster/search/name/'+encodeURI(namaMonster));
+						msg.channel.sendMessage(msg.author.toString()+ ' List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\nuntuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/monster/search/name/'+encodeURI(namaMonster)).then((message => message.delete(60000)));
 					});					
 				} else {
 					msg.channel.sendMessage( msg.author.toString()+' Monster ' + namaMonster + ' tidak ditemukan' );
@@ -62,6 +63,30 @@ exports.whereis = {
 				user.putQueue("whereis", map);
 			});
 
+		});
+	}
+}
+
+exports.wii = {
+	usage: "index sebelumnya dari hasil "+Config.commandPrefix+"whodrops",
+	description: "Info drop item",
+	process: function(bot, msg, suffix) {
+		getDiscordUser(msg.author, function(user) {
+			user.getQueue("whodrops", function(data){
+				if (data != undefined && data) {
+					var mon = data[suffix];
+					if (mon != undefined) {
+						searchItemList(data[suffix]["id"], function(map){
+							if (map != false) {
+								msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/search/name/'+encodeURI(data[suffix]["displayname"])).then((message => message.delete(60000)));
+							} else {
+								msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' tidak di drop cyin~' ).then((message => message.delete(5000)));
+							}
+						});
+					}
+					
+				}
+			});
 		});
 	}
 }
@@ -79,14 +104,19 @@ exports.whodrops = {
 		}
 
 		var namaItem = suffix;
-		searchItem(namaItem, function(monster){
-			if (monster != false) {
-				msg.channel.sendMessage( 'Item ' + namaItem + ' ada di monster \n'+monster+ 'untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/'+encodeURI(namaItem));
-			} else {
-				msg.channel.sendMessage( 'Maaf ' + namaItem + ' tidak ditemukan' );
-			}
+		getDiscordUser(msg.author, function(user) {
+			searchItem(namaItem, function(itemlist){
+				if (itemlist != false) {
+						user.putQueue("whodrops", itemlist);
+						parseArray(itemlist, function(index, data){return "\n"+Config.commandPrefix+"wii "+index+" => "+data['displayname'];}, function(str){
+							msg.channel.sendMessage(msg.author.toString()+ ' List Item berdasarkan keyword ' + namaItem + ' '+str+ '\nuntuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/search/name/'+encodeURI(namaItem)).then((message => message.delete(60000)));
+						});					
+					} else {
+						msg.channel.sendMessage( msg.author.toString()+' Item ' + namaItem + ' tidak di temukan say :(' ).then((message => message.delete(5000)));
+					}
+					user.putQueue("whodrops", itemlist);
+			});
 		});
-		
 	}
 }
 
@@ -107,12 +137,13 @@ exports.wmi = {
 							}
 						});
 					}
-					// user.putQueue("whereis", []);
+					
 				}
 			});
 		});
 	}
 }
+
 //
 // Parse Array to String
 function parseArray(data, format, cb) {
@@ -132,7 +163,7 @@ function monsterMaplist(id, cb) {
 		res = JSON.parse(body);
 		// get first macthed name
 		var mapList = "```\n";
-		if (res.map !== undefined) {
+		if (res.map !== undefined && res.map) {
 			for (var i = 0; i < res.map.length; i++) {
 				var map = res.map[i];
 				mapList += map['name'] + "("+map['count']+")\n";
@@ -170,19 +201,8 @@ function searchItem(nama, cb) {
 		
 		res = JSON.parse(body);
 		// get first macthed name
-		if (res.found > 1) {
-			for (var i = 0; i < res.itemlist.length; i++) {
-				var item = res.itemlist[i];
-				if (item.displayname.toLowerCase().indexOf(nama.toLowerCase()) >= 0) {
-					return searchItemList(item.id, function(item){
-						return cb(item);
-					});
-				}
-			}
-		} else if (res.found == 1) {
-			return searchItemList(res.itemlist[0].id, function(item){
-				return cb(item);
-			});
+		if (res.found >= 1) {
+			return cb(res.itemlist);	
 		}
 
 		cb(false);
@@ -195,9 +215,8 @@ function searchItemList(id, cb) {
 		
 		res = JSON.parse(body);
 		// get first macthed name
-		var mobList = "";
-		console.log(res.moblist);
-		if (res.moblist !== undefined) {
+		var mobList = "```\n";
+		if (res.moblist !== undefined && res.moblist) {
 			for (var i = 0; i < res.moblist.length; i++) {
 				var moblist = res.moblist[i];
 				mobList += moblist['iROName'] + "\n";
@@ -205,6 +224,7 @@ function searchItemList(id, cb) {
 					break;
 				}
 			}
+			mobList += "```\n";
 			return cb(mobList);
 		} else {
 			console.log('gak ada :( '+ id);
@@ -217,6 +237,7 @@ function searchItemList(id, cb) {
 function DiscordUser(user) {
 	this._id = user.id;
 	this.queue = [];
+	this._lastCommand = "";
 	this.getLastRequest = function() {
 		return this._lastRequest;
 	}
@@ -234,6 +255,14 @@ function DiscordUser(user) {
 		db.save(this._id, this, function(err){
 		 
 		});
+	}
+
+	this.setLastCommand = function(str) {
+		this._lastCommand = str;
+	}
+
+	this.getLastCommand = function(str, cb) {
+		return cb(this._lastCommand);
 	}
 }
 

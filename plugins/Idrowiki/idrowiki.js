@@ -18,7 +18,8 @@ exports.commands = [
 	"whodrops",
 	"anu",
 	"wmi",
-	"wii"
+	"wii",
+	"pilih"
 ];
 
 var badWords = [
@@ -54,6 +55,7 @@ exports.whereis = {
 			searchMonster(namaMonster, function(map){
 				if (map != false) {
 					user.putQueue("whereis", map);
+					user.setLastCommand("whereis");
 					parseArray(map, function(index, data){return "\n"+Config.commandPrefix+"wmi "+index+" => "+data['kROName'];}, function(str){
 						msg.channel.sendMessage(msg.author.toString()+ ' List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\nuntuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/monster/search/name/'+encodeURI(namaMonster)).then((message => message.delete(60000)));
 					});					
@@ -72,19 +74,21 @@ exports.wii = {
 	description: "Info drop item",
 	process: function(bot, msg, suffix) {
 		getDiscordUser(msg.author, function(user) {
-			user.getQueue("whodrops", function(data){
-				if (data != undefined && data) {
-					var mon = data[suffix];
-					if (mon != undefined) {
-						searchItemList(data[suffix]["id"], function(map){
-							if (map != false) {
-								msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/search/name/'+encodeURI(data[suffix]["displayname"])).then((message => message.delete(60000)));
-							} else {
-								msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' tidak di drop cyin~' ).then((message => message.delete(5000)));
-							}
-						});
-					}
-					
+			parseWii(msg, user, suffix);
+		});
+	}
+}
+
+exports.pilih = {
+	usage: "index",
+	description: "Memilih dari hasil perintah sebelumnya ",
+	process: function(bot, msg, suffix) {
+		getDiscordUser(msg.author, function(user) {
+			user.getLastCommand(function(cmd){
+				if (cmd == "whodrops") {
+					parseWii(msg, user, suffix);
+				} else if (cmd == "whereis") {
+					parseWmi(msg, user, suffix);
 				}
 			});
 		});
@@ -108,6 +112,7 @@ exports.whodrops = {
 			searchItem(namaItem, function(itemlist){
 				if (itemlist != false) {
 						user.putQueue("whodrops", itemlist);
+						user.setLastCommand("whodrops");
 						parseArray(itemlist, function(index, data){return "\n"+Config.commandPrefix+"wii "+index+" => "+data['displayname'];}, function(str){
 							msg.channel.sendMessage(msg.author.toString()+ ' List Item berdasarkan keyword ' + namaItem + ' '+str+ '\nuntuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/search/name/'+encodeURI(namaItem)).then((message => message.delete(60000)));
 						});					
@@ -125,23 +130,45 @@ exports.wmi = {
 	description: "Info monster",
 	process: function(bot, msg, suffix) {
 		getDiscordUser(msg.author, function(user) {
-			user.getQueue("whereis", function(data){
-				if (data != undefined && data) {
-					var mon = data[suffix];
-					if (mon != undefined) {
-						monsterMaplist(data[suffix]["ID"], function(map){
-							if (map != false) {
-								msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+encodeURI(data[suffix]["ID"]));
-							} else {
-								msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' tidak ditemukan' );
-							}
-						});
-					}
-					
-				}
-			});
+			parseWmi(msg, user ,suffix);
 		});
 	}
+}
+
+function parseWii(msg, user, suffix) {
+	user.getQueue("whodrops", function(data){
+		if (data != undefined && data) {
+			var mon = data[suffix];
+			if (mon != undefined) {
+				searchItemList(data[suffix]["id"], function(map){
+					if (map != false) {
+						msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/search/name/'+encodeURI(data[suffix]["displayname"])).then((message => message.delete(60000)));
+					} else {
+						msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' tidak di drop cyin~' ).then((message => message.delete(5000)));
+					}
+				});
+			}
+			
+		}
+	});
+}
+
+function parseWmi(msg, user, suffix) {
+	user.getQueue("whereis", function(data){
+		if (data != undefined && data) {
+			var mon = data[suffix];
+			if (mon != undefined) {
+				monsterMaplist(data[suffix]["ID"], function(map){
+					if (map != false) {
+						msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+encodeURI(data[suffix]["ID"]));
+					} else {
+						msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' tidak ditemukan' );
+					}
+				});
+			}
+			
+		}
+	});
 }
 
 //
@@ -261,7 +288,7 @@ function DiscordUser(user) {
 		this._lastCommand = str;
 	}
 
-	this.getLastCommand = function(str, cb) {
+	this.getLastCommand = function(cb) {
 		return cb(this._lastCommand);
 	}
 }

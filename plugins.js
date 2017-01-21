@@ -7,6 +7,23 @@ function getDirectories(srcpath) {
     });
 }
 
+var Config = {};
+try{
+    Config = require("./config.json");
+} catch(e){ //no config file, use defaults
+    console.log(e);
+    Config.debug = false;
+    Config.commandPrefix = '!';
+    Config.loadPlugin = ["IdRoWiki"];
+    try{
+        if(fs.lstatSync("./config.json").isFile()){
+            console.log("WARNING: config.json found but we couldn't read it!\n" + e.stack);
+        }
+    } catch(e2){
+        fs.writeFile("./config.json",JSON.stringify(Config,null,2));
+    }
+}
+
 var plugin_folders;
 var plugin_directory;
 var exec_dir;
@@ -73,12 +90,12 @@ function preload_plugins(){
 function load_plugins(){
     var dbot = require("./discord_bot.js");
     var commandCount = 0;
-    for (var i = 0; i < plugin_folders.length; i++) {
+    for (var i = 0; i < Config.loadPlugin.length; i++) {
         var plugin;
         try{
-            plugin = require(plugin_directory + plugin_folders[i])
+            plugin = require(plugin_directory + Config.loadPlugin[i])
         } catch (err){
-            console.log("Improper setup of the '" + plugin_folders[i] +"' plugin. : " + err);
+            console.log("Improper setup of the '" + Config.loadPlugin[i] +"' plugin. : " + err);
         }
         if (plugin){
             if("commands" in plugin){

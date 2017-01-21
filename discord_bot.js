@@ -60,6 +60,7 @@ var Config = {};
 try{
 	Config = require("./config.json");
 } catch(e){ //no config file, use defaults
+	console.log(e);
 	Config.debug = false;
 	Config.commandPrefix = '!';
 	try{
@@ -72,6 +73,10 @@ try{
 }
 if(!Config.hasOwnProperty("commandPrefix")){
 	Config.commandPrefix = '!';
+}
+
+if(!Config.hasOwnProperty("channel")){
+	Config.channel = '85355229918269440';
 }
 
 var messagebox;
@@ -297,21 +302,26 @@ function checkMessageForCommand(msg, isEdit) {
 					}
         }
 		else if(cmd) {
-			if(Permissions.checkPermission(msg.author,cmdTxt)){
-				try{
-					cmd.process(bot,msg,suffix,isEdit);
-				} catch(e){
-					var msgTxt = "command " + cmdTxt + " failed :(";
-					if(Config.debug){
-						 msgTxt += "\n" + e.stack;
+			if (msg.channel.id == Config.channel || msg.channel.type == "dm") {
+				if(Permissions.checkPermission(msg.author,cmdTxt)){
+					try{
+						cmd.process(bot,msg,suffix,isEdit);
+					} catch(e){
+						var msgTxt = "command " + cmdTxt + " failed :(";
+						if(Config.debug){
+							 msgTxt += "\n" + e.stack;
+						}
+						msg.channel.sendMessage(msgTxt);
 					}
-					msg.channel.sendMessage(msgTxt);
+				} else {
+					msg.channel.sendMessage("You are not allowed to run " + cmdTxt + "!");
 				}
 			} else {
-				msg.channel.sendMessage("You are not allowed to run " + cmdTxt + "!");
+				//msg.channel.sendMessage("You are not allowed to run " + cmdTxt + " in this channel :P");
 			}
+			
 		} else {
-			msg.channel.sendMessage(cmdTxt + " not recognized as a command!").then((message => message.delete(5000)))
+			// msg.channel.sendMessage(cmdTxt + " not recognized as a command!").then((message => message.delete(5000)))
 		}
 	} else {
 		//message isn't a command or is from us

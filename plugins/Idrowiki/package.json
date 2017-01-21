@@ -1,0 +1,6 @@
+{
+  "main": "idrowiki.js",
+  "dependencies": {
+    "request": ">=2.58.0"
+  }
+}

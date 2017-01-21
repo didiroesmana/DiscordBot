@@ -1,4 +1,7 @@
 var request = require("request");
+var Store = require("jfs");
+
+var db = new Store("data",{type:"memory"});
 
 try{
 	var Config = require("../../Config.json");
@@ -9,9 +12,13 @@ try{
 var urlApi = Config.urlApi;
 var authKey = Config.authKeyApi;
 
+var discordUser = DiscordUser.prototype;
+
 exports.commands = [
 	"whereis",
-	"whodrops"
+	"whodrops",
+	"anu",
+	"wmi"
 ];
 
 var badWords = [
@@ -19,6 +26,16 @@ var badWords = [
 	"pacar",
 	"mantan"
 ];
+
+exports.anu = {
+	usage: "anu",
+	description: "anu",
+	process: function(bot, msg, suffix) {
+		getDiscordUser(msg.author, function(user) {
+			console.log(user);
+		});
+	}
+}
 
 exports.whereis = {
 	usage:"nama monster",
@@ -33,14 +50,20 @@ exports.whereis = {
 		}
 
 		var namaMonster = suffix;
-		searchMonster(namaMonster, function(map){
-			if (map != false) {
-				msg.channel.sendMessage( 'Monster ' + namaMonster + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+namaMonster);
-			} else {
-				msg.channel.sendMessage( 'Monster ' + namaMonster + ' tidak ditemukan' );
-			}
+		getDiscordUser(msg.author, function(user) {
+			searchMonster(namaMonster, function(map){
+				if (map != false) {
+					user.putQueue("whereis", map);
+					parseArray(map, function(index, data){return "\n**"+Config.commandPrefix+"wmi "+index+"** => "+data['kROName'];}, function(str){
+						msg.channel.sendMessage( 'List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\n untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+namaMonster);
+					});					
+				} else {
+					msg.channel.sendMessage( 'Monster ' + namaMonster + ' tidak ditemukan' );
+				}
+				user.putQueue("whereis", map);
+			});
+
 		});
-		
 	}
 }
 
@@ -68,20 +91,39 @@ exports.whodrops = {
 	}
 }
 
-function monsterMaplist(id, cb) {
-	var options = { 
-		method: 'POST',
-		url: urlApi,
-		headers: {
-			'content-type': 'application/x-www-form-urlencoded' 
-		},
-		form: { 
-			data: '{"API_Key": "'+authKey+'","API_Req":"monster_maplist", "keyword" : "'+id+'"}' 
-		} 
+exports.wmi = {
+	usage: "index sebelumnya dari hasil "+Config.commandPrefix+"whereis",
+	description: "Info monster",
+	process: function(bot, msg, suffix) {
+		getDiscordUser(msg.author, function(user) {
+			user.getQueue("whereis", function(data){
+				if (data != undefined && data) {
+					monsterMaplist(data[suffix]["ID"], function(map){
+						if (map != false) {
+							msg.channel.sendMessage( 'Monster ' + data[suffix]["kROName"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+data[suffix]["kROName"]);
+						} else {
+							msg.channel.sendMessage( 'Monster ' + data[suffix]["kROName"] + ' tidak ditemukan' );
+						}
+					});
+					user.putQueue("whereis", []);
+				}
+			});
+		});
+	}
+}
+//
+// Parse Array to String
+function parseArray(data, format, cb) {
+	var to_string = "";
+	for (var i = 0; i < data.length; i++) {
+		var dat = data[i];
+		to_string += format(i,dat);
 	};
+	return cb(to_string);
+}
 
-	console.log("monster id "+id);
-	request(options, function (error, response, body) {
+function monsterMaplist(id, cb) {
+	callDbApi("monster_maplist", id , function (error, response, body) {
 		if (error) throw new Error(error);
 		
 		res = JSON.parse(body);
@@ -90,7 +132,7 @@ function monsterMaplist(id, cb) {
 		if (res.map !== undefined) {
 			for (var i = 0; i < res.map.length; i++) {
 				var map = res.map[i];
-				mapList += map['name'] + " ("+map['count']+")\n";
+				mapList += "**"+map['name'] + "** ("+map['count']+")\n";
 				if (i > 4) {
 					break;
 				}
@@ -105,23 +147,13 @@ function monsterMaplist(id, cb) {
 }
 
 function searchMonster(nama, cb) {
-	var options = { 
-		method: 'POST',
-		url: urlApi,
-		headers: {
-			'content-type': 'application/x-www-form-urlencoded' 
-		},
-		form: { 
-			data: '{"API_Key": "'+authKey+'","API_Req":"monster_search", "keyword" : "'+nama+'"}' 
-		} 
-	};
-
-	request(options, function (error, response, body) {
+	callDbApi("monster_search", nama, function (error, response, body) {
 		if (error) throw new Error(error);
 		
 		res = JSON.parse(body);
 		// get first macthed name
-		if (res.found > 1) {
+		if (res.found >= 1) {
+			return cb(res.moblist);
 			for (var i = 0; i < res.moblist.length; i++) {
 				var mob = res.moblist[i];
 				if (mob.iROName.toLowerCase().indexOf(nama.toLowerCase()) >= 0) {
@@ -131,6 +163,7 @@ function searchMonster(nama, cb) {
 				}
 			}
 		} else if (res.found == 1) {
+			return cb(res.moblist);
 			return monsterMaplist(res.moblist[0], function(map){
 				return cb(map);
 			});
@@ -142,18 +175,7 @@ function searchMonster(nama, cb) {
 
 
 function searchItem(nama, cb) {
-	var options = { 
-		method: 'POST',
-		url: urlApi,
-		headers: {
-			'content-type': 'application/x-www-form-urlencoded' 
-		},
-		form: { 
-			data: '{"API_Key": "'+authKey+'","API_Req":"item_search", "keyword" : "'+nama+'"}' 
-		} 
-	};
-
-	request(options, function (error, response, body) {
+	callDbApi("item_search", nama, function(error, response, body){
 		if (error) throw new Error(error);
 		
 		res = JSON.parse(body);
@@ -174,32 +196,21 @@ function searchItem(nama, cb) {
 		}
 
 		cb(false);
-	});
+	})
 }
 
 function searchItemList(id, cb) {
-	var options = { 
-		method: 'POST',
-		url: urlApi,
-		headers: {
-			'content-type': 'application/x-www-form-urlencoded' 
-		},
-		form: { 
-			data: '{"API_Key": "'+authKey+'","API_Req":"item_droplist", "keyword" : "'+id+'"}' 
-		} 
-	};
-
-	request(options, function (error, response, body) {
+	callDbApi("item_droplist", id, function(error, response, body) {
 		if (error) throw new Error(error);
 		
 		res = JSON.parse(body);
 		// get first macthed name
 		var mobList = "";
-
+		console.log(res.moblist);
 		if (res.moblist !== undefined) {
 			for (var i = 0; i < res.moblist.length; i++) {
 				var moblist = res.moblist[i];
-				mobList += moblist['name'] + "\n";
+				mobList += moblist['iROName'] + "\n";
 				if (i > 4) {
 					break;
 				}
@@ -210,5 +221,61 @@ function searchItemList(id, cb) {
 		}
 
 		return cb(false);
+	});
+}
+
+function DiscordUser(user) {
+	this._id = user.id;
+	this.queue = [];
+	this.getLastRequest = function() {
+		return this._lastRequest;
+	}
+
+	this.getQueue = function(key, cb) {
+		cb(this.queue[key]);
+	}
+
+	this.putQueue = function(key, data) {
+		this.queue[key] = data;
+		this.save();
+	}
+
+	this.save = function() {
+		db.save(this._id, this, function(err){
+		 
+		});
+	}
+}
+
+
+
+function getDiscordUser(user, cb) {
+	db.get(user.id, function(err, obj){
+		var usrDiscord;
+		if (!obj) {
+			usrDiscord = new DiscordUser(user);
+			usrDiscord.save();
+		} else {
+			usrDiscord = obj;
+		}
+		return cb(usrDiscord);
+	});
+}
+
+
+function callDbApi(type, keyword, cb) {
+	var options = { 
+		method: 'POST',
+		url: urlApi,
+		headers: {
+			'content-type': 'application/x-www-form-urlencoded' 
+		},
+		form: { 
+			data: '{"API_Key": "'+authKey+'","API_Req":"'+type+'", "keyword" : "'+keyword+'"}' 
+		} 
+	};
+
+	return request(options, function (error, response, body) {
+		return cb(error, response, body);
 	});
 }

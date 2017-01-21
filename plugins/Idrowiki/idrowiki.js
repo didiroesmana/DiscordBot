@@ -11,7 +11,6 @@ try{
 
 var urlApi = Config.urlApi;
 var authKey = Config.authKeyApi;
-
 var discordUser = DiscordUser.prototype;
 
 exports.commands = [
@@ -42,11 +41,11 @@ exports.whereis = {
 	description: "memberikan info letak posisi monster",
 	process: function(bot, msg, suffix) {
 		if (suffix.length < 4) {
-			return msg.author.sendMessage("Minimal 3 karakter");
+			return msg.author.sendMessage(msg.author.toString()+"Minimal 3 karakter");
 		}
 
 		if (badWords.indexOf(suffix.toLowerCase()) >= 0 ) {
-			return msg.channel.sendMessage("Bukan biro jodoh kak :(");
+			return msg.channel.sendMessage(msg.author.toString()+"Bukan biro jodoh kak :(");
 		}
 
 		var namaMonster = suffix;
@@ -54,11 +53,11 @@ exports.whereis = {
 			searchMonster(namaMonster, function(map){
 				if (map != false) {
 					user.putQueue("whereis", map);
-					parseArray(map, function(index, data){return "\n**"+Config.commandPrefix+"wmi "+index+"** => "+data['kROName'];}, function(str){
-						msg.channel.sendMessage( 'List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\n untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+namaMonster);
+					parseArray(map, function(index, data){return "\n"+Config.commandPrefix+"wmi "+index+" => "+data['kROName'];}, function(str){
+						msg.channel.sendMessage(msg.author.toString()+ ' List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\n untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+namaMonster);
 					});					
 				} else {
-					msg.channel.sendMessage( 'Monster ' + namaMonster + ' tidak ditemukan' );
+					msg.channel.sendMessage( msg.author.toString()+' Monster ' + namaMonster + ' tidak ditemukan' );
 				}
 				user.putQueue("whereis", map);
 			});
@@ -98,14 +97,17 @@ exports.wmi = {
 		getDiscordUser(msg.author, function(user) {
 			user.getQueue("whereis", function(data){
 				if (data != undefined && data) {
-					monsterMaplist(data[suffix]["ID"], function(map){
-						if (map != false) {
-							msg.channel.sendMessage( 'Monster ' + data[suffix]["kROName"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+data[suffix]["kROName"]);
-						} else {
-							msg.channel.sendMessage( 'Monster ' + data[suffix]["kROName"] + ' tidak ditemukan' );
-						}
-					});
-					user.putQueue("whereis", []);
+					var mon = data[suffix];
+					if (mon != undefined) {
+						monsterMaplist(data[suffix]["ID"], function(map){
+							if (map != false) {
+								msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+data[suffix]["ID"]);
+							} else {
+								msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' tidak ditemukan' );
+							}
+						});
+					}
+					// user.putQueue("whereis", []);
 				}
 			});
 		});
@@ -114,11 +116,12 @@ exports.wmi = {
 //
 // Parse Array to String
 function parseArray(data, format, cb) {
-	var to_string = "";
+	var to_string = "```";
 	for (var i = 0; i < data.length; i++) {
 		var dat = data[i];
 		to_string += format(i,dat);
 	};
+	to_string += "```";
 	return cb(to_string);
 }
 
@@ -128,15 +131,16 @@ function monsterMaplist(id, cb) {
 		
 		res = JSON.parse(body);
 		// get first macthed name
-		var mapList = "";
+		var mapList = "```\n";
 		if (res.map !== undefined) {
 			for (var i = 0; i < res.map.length; i++) {
 				var map = res.map[i];
-				mapList += "**"+map['name'] + "** ("+map['count']+")\n";
+				mapList += map['name'] + "("+map['count']+")\n";
 				if (i > 4) {
 					break;
 				}
 			}
+			mapList += "```";
 			return cb(mapList);
 		} else {
 			console.log('gak ada :(');
@@ -154,25 +158,11 @@ function searchMonster(nama, cb) {
 		// get first macthed name
 		if (res.found >= 1) {
 			return cb(res.moblist);
-			for (var i = 0; i < res.moblist.length; i++) {
-				var mob = res.moblist[i];
-				if (mob.iROName.toLowerCase().indexOf(nama.toLowerCase()) >= 0) {
-					return monsterMaplist(mob.ID, function(map){
-						return cb(map);
-					});
-				}
-			}
-		} else if (res.found == 1) {
-			return cb(res.moblist);
-			return monsterMaplist(res.moblist[0], function(map){
-				return cb(map);
-			});
 		}
 
 		cb(false);
 	});
 }
-
 
 function searchItem(nama, cb) {
 	callDbApi("item_search", nama, function(error, response, body){
@@ -247,8 +237,6 @@ function DiscordUser(user) {
 	}
 }
 
-
-
 function getDiscordUser(user, cb) {
 	db.get(user.id, function(err, obj){
 		var usrDiscord;
@@ -261,7 +249,6 @@ function getDiscordUser(user, cb) {
 		return cb(usrDiscord);
 	});
 }
-
 
 function callDbApi(type, keyword, cb) {
 	var options = { 
@@ -279,3 +266,4 @@ function callDbApi(type, keyword, cb) {
 		return cb(error, response, body);
 	});
 }
+

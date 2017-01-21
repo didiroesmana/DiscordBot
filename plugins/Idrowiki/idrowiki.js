@@ -40,12 +40,12 @@ exports.whereis = {
 	usage:"nama monster",
 	description: "memberikan info letak posisi monster",
 	process: function(bot, msg, suffix) {
-		if (suffix.length < 4) {
-			return msg.author.sendMessage(msg.author.toString()+"Minimal 3 karakter");
+		if (suffix.length < 3) {
+			return msg.channel.sendMessage("Minimal 3 karakter coi").then((message => message.delete(5000)));
 		}
 
 		if (badWords.indexOf(suffix.toLowerCase()) >= 0 ) {
-			return msg.channel.sendMessage(msg.author.toString()+"Bukan biro jodoh kak :(");
+			return msg.channel.sendMessage(msg.author.toString()+" Bukan biro jodoh kak :(");
 		}
 
 		var namaMonster = suffix;
@@ -54,7 +54,7 @@ exports.whereis = {
 				if (map != false) {
 					user.putQueue("whereis", map);
 					parseArray(map, function(index, data){return "\n"+Config.commandPrefix+"wmi "+index+" => "+data['kROName'];}, function(str){
-						msg.channel.sendMessage(msg.author.toString()+ ' List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\n untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+namaMonster);
+						msg.channel.sendMessage(msg.author.toString()+ ' List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\n untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/monster/search/name/'+encodeURI(namaMonster));
 					});					
 				} else {
 					msg.channel.sendMessage( msg.author.toString()+' Monster ' + namaMonster + ' tidak ditemukan' );
@@ -70,18 +70,18 @@ exports.whodrops = {
 	usage:"nama item",
 	description: "memberikan info item",
 	process: function(bot, msg, suffix) {
-		if (suffix.length < 4) {
-			return msg.author.sendMessage("Minimal 3 karakter");
+		if (suffix.length < 3) {
+			return msg.channel.sendMessage("Minimal 3 karakter coi").then((message => message.delete(5000)));
 		}
 		
 		if (badWords.indexOf(suffix.toLowerCase()) >= 0 ) {
-			return msg.channel.sendMessage("Bukan biro jodoh kak :(");
+			return msg.channel.sendMessage(msg.author.toString()+" Bukan biro jodoh kak :(");
 		}
 
 		var namaItem = suffix;
 		searchItem(namaItem, function(monster){
 			if (monster != false) {
-				msg.channel.sendMessage( 'Item ' + namaItem + ' ada di monster \n'+monster+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/item/'+namaItem);
+				msg.channel.sendMessage( 'Item ' + namaItem + ' ada di monster \n'+monster+ 'untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/'+encodeURI(namaItem));
 			} else {
 				msg.channel.sendMessage( 'Maaf ' + namaItem + ' tidak ditemukan' );
 			}
@@ -101,7 +101,7 @@ exports.wmi = {
 					if (mon != undefined) {
 						monsterMaplist(data[suffix]["ID"], function(map){
 							if (map != false) {
-								msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+data[suffix]["ID"]);
+								msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+encodeURI(data[suffix]["ID"]));
 							} else {
 								msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' tidak ditemukan' );
 							}

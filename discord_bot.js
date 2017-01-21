@@ -71,6 +71,15 @@ try{
 		fs.writeFile("./config.json",JSON.stringify(Config,null,2));
 	}
 }
+function updateConfig() {
+	try{
+		if(fs.lstatSync("./config.json").isFile()){
+			console.log("WARNING: config.json found but we couldn't read it!\n" + e.stack);
+		}
+	} catch(e2){
+		fs.writeFile("./config.json",JSON.stringify(Config,null,2));
+	}
+}
 if(!Config.hasOwnProperty("commandPrefix")){
 	Config.commandPrefix = '!';
 }
@@ -244,7 +253,7 @@ function checkMessageForCommand(msg, isEdit) {
 		if(alias){
 			console.log(cmdTxt + " is an alias, constructed command is " + alias.join(" ") + " " + suffix);
 			cmdTxt = alias[0];
-			suffix = alias[1] + " " + suffix;
+			suffix = alias[1] + "" + suffix;
 		}
 		var cmd = commands[cmdTxt];
         if(cmdTxt === "help"){

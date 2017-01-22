@@ -1,5 +1,5 @@
 var fs = require('fs');
-
+var user = require('./plugins/User/user.js');
 try {
 	var Discord = require("discord.js");
 } catch (e){
@@ -320,7 +320,7 @@ function checkMessageForCommand(msg, isEdit) {
 						if(Config.debug){
 							 msgTxt += "\n" + e.stack;
 						}
-						msg.channel.sendMessage(msgTxt);
+						msg.channel.sendMessage(msgTxt).then((message => message.delete(1000)));
 					}
 				} else {
 					msg.channel.sendMessage("You are not allowed to run " + cmdTxt + "!");
@@ -339,11 +339,17 @@ function checkMessageForCommand(msg, isEdit) {
             return;
         }
 
+
+
         if (msg.author != bot.user && msg.isMentioned(bot.user)) {
                 msg.channel.sendMessage(msg.author + ", you called?");
         } else {
-
-				}
+        	if (!isEdit && msg.author.bot === false) {
+        		user.getDiscordUser(msg.author, function(usr) {
+        			usr.addPoint();
+        		});
+        	}
+		}
     }
 }
 

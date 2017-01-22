@@ -3,6 +3,8 @@ var Store = require("jfs");
 
 var db = new Store("data",{type:"memory"});
 
+var dcUser = require("../User/user.js");
+
 try{
 	var Config = require("../../Config.json");
 } catch(e) {
@@ -11,7 +13,7 @@ try{
 
 var urlApi = Config.urlApi;
 var authKey = Config.authKeyApi;
-var discordUser = DiscordUser.prototype;
+
 
 exports.commands = [
 	"whereis",
@@ -32,7 +34,7 @@ exports.anu = {
 	usage: "anu",
 	description: "anu",
 	process: function(bot, msg, suffix) {
-		getDiscordUser(msg.author, function(user) {
+		dcUser.getDiscordUser(msg.author, function(user) {
 			console.log(user);
 		});
 	}
@@ -51,12 +53,13 @@ exports.whereis = {
 		}
 
 		var namaMonster = suffix;
-		getDiscordUser(msg.author, function(user) {
+		dcUser.getDiscordUser(msg.author, function(user) {
+			console.log(user);
 			searchMonster(namaMonster, function(map){
 				if (map != false) {
-					user.putQueue("whereis", map);
 					user.setLastCommand("whereis");
-					parseArray(map, function(index, data){return "\n"+Config.commandPrefix+"wmi "+index+" => "+data['kROName'];}, function(str){
+					user.putQueue("whereis", map);
+					parseArray(map, function(index, data){return "\n"+Config.commandPrefix+"pilih "+index+" => "+data['kROName'];}, function(str){
 						msg.channel.sendMessage(msg.author.toString()+ ' List monster berdasarkan keyword ' + namaMonster + ' '+str+ '\nuntuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/monster/search/name/'+encodeURI(namaMonster)).then((message => message.delete(60000)));
 					});					
 				} else {
@@ -73,7 +76,7 @@ exports.wii = {
 	usage: "index sebelumnya dari hasil "+Config.commandPrefix+"whodrops",
 	description: "Info drop item",
 	process: function(bot, msg, suffix) {
-		getDiscordUser(msg.author, function(user) {
+		dcUser.getDiscordUser(msg.author, function(user) {
 			parseWii(msg, user, suffix);
 		});
 	}
@@ -83,7 +86,7 @@ exports.pilih = {
 	usage: "index",
 	description: "Memilih dari hasil perintah sebelumnya ",
 	process: function(bot, msg, suffix) {
-		getDiscordUser(msg.author, function(user) {
+		dcUser.getDiscordUser(msg.author, function(user) {
 			user.getLastCommand(function(cmd){
 				if (cmd == "whodrops") {
 					parseWii(msg, user, suffix);
@@ -108,12 +111,12 @@ exports.whodrops = {
 		}
 
 		var namaItem = suffix;
-		getDiscordUser(msg.author, function(user) {
+		dcUser.getDiscordUser(msg.author, function(user) {
 			searchItem(namaItem, function(itemlist){
 				if (itemlist != false) {
-						user.putQueue("whodrops", itemlist);
 						user.setLastCommand("whodrops");
-						parseArray(itemlist, function(index, data){return "\n"+Config.commandPrefix+"wii "+index+" => "+data['displayname'];}, function(str){
+						user.putQueue("whodrops", itemlist);
+						parseArray(itemlist, function(index, data){return "\n"+Config.commandPrefix+"pilih "+index+" => "+data['displayname'];}, function(str){
 							msg.channel.sendMessage(msg.author.toString()+ ' List Item berdasarkan keyword ' + namaItem + ' '+str+ '\nuntuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/search/name/'+encodeURI(namaItem)).then((message => message.delete(60000)));
 						});					
 					} else {
@@ -129,7 +132,7 @@ exports.wmi = {
 	usage: "index sebelumnya dari hasil "+Config.commandPrefix+"whereis",
 	description: "Info monster",
 	process: function(bot, msg, suffix) {
-		getDiscordUser(msg.author, function(user) {
+		dcUser.getDiscordUser(msg.author, function(user) {
 			parseWmi(msg, user ,suffix);
 		});
 	}
@@ -142,7 +145,7 @@ function parseWii(msg, user, suffix) {
 			if (mon != undefined) {
 				searchItemList(data[suffix]["id"], function(map){
 					if (map != false) {
-						msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/search/name/'+encodeURI(data[suffix]["displayname"])).then((message => message.delete(60000)));
+						msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' ada di monster \n'+map+ 'untuk keterangan lebih lanjut bisa klik \nhttps://db.idrowiki.org/klasik/item/search/name/'+encodeURI(data[suffix]["displayname"])).then((message => message.delete(60000)));
 					} else {
 						msg.channel.sendMessage(msg.author.toString()+' Item ' + data[suffix]["displayname"] + ' tidak di drop cyin~' ).then((message => message.delete(5000)));
 					}
@@ -258,51 +261,6 @@ function searchItemList(id, cb) {
 		}
 
 		return cb(false);
-	});
-}
-
-function DiscordUser(user) {
-	this._id = user.id;
-	this.queue = [];
-	this._lastCommand = "";
-	this.getLastRequest = function() {
-		return this._lastRequest;
-	}
-
-	this.getQueue = function(key, cb) {
-		cb(this.queue[key]);
-	}
-
-	this.putQueue = function(key, data) {
-		this.queue[key] = data;
-		this.save();
-	}
-
-	this.save = function() {
-		db.save(this._id, this, function(err){
-		 
-		});
-	}
-
-	this.setLastCommand = function(str) {
-		this._lastCommand = str;
-	}
-
-	this.getLastCommand = function(cb) {
-		return cb(this._lastCommand);
-	}
-}
-
-function getDiscordUser(user, cb) {
-	db.get(user.id, function(err, obj){
-		var usrDiscord;
-		if (!obj) {
-			usrDiscord = new DiscordUser(user);
-			usrDiscord.save();
-		} else {
-			usrDiscord = obj;
-		}
-		return cb(usrDiscord);
 	});
 }
 

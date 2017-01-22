@@ -1,0 +1,9 @@
+{
+  "main": "user.js",
+  "dependencies": {
+    "request": ">=2.58.0",
+    "jfs" : "~0.2.6",
+    "node-serialize":"0.0.4",
+    "moongose":"4.7.7"
+  }
+}

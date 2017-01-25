@@ -1,0 +1,7 @@
+{
+  "main": "trivia.js",
+  "dependencies": {
+  	"bookshelf-modelbase":"2.10.3",
+  	"synchronize":"^2.0.0"
+  }
+}

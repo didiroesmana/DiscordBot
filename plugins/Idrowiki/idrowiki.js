@@ -18,7 +18,6 @@ var authKey = Config.authKeyApi;
 exports.commands = [
 	"whereis",
 	"whodrops",
-	"anu",
 	"wmi",
 	"wii",
 	"pilih"
@@ -29,16 +28,6 @@ var badWords = [
 	"pacar",
 	"mantan"
 ];
-
-exports.anu = {
-	usage: "anu",
-	description: "anu",
-	process: function(bot, msg, suffix) {
-		dcUser.getDiscordUser(msg.author, function(user) {
-			console.log(user);
-		});
-	}
-}
 
 exports.whereis = {
 	usage:"nama monster",
@@ -54,7 +43,6 @@ exports.whereis = {
 
 		var namaMonster = suffix;
 		dcUser.getDiscordUser(msg.author, function(user) {
-			console.log(user);
 			searchMonster(namaMonster, function(map){
 				if (map != false) {
 					user.setLastCommand("whereis");
@@ -165,7 +153,7 @@ function parseWmi(msg, user, suffix) {
 					if (map != false) {
 						msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' ada di map \n'+map+ 'untuk keterangan lebih lanjut bisa klik https://db.idrowiki.org/klasik/monster/'+encodeURI(data[suffix]["ID"])).then((message => message.delete(60000)));
 					} else {
-						msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' tidak ditemukan' );
+						msg.channel.sendMessage(msg.author.toString()+' Monster ' + data[suffix]["kROName"] + ' tidak spawn' ).then((message => message.delete(5000)));
 					}
 				});
 			}

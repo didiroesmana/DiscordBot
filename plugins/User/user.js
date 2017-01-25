@@ -25,6 +25,14 @@ exports.point = {
 	}
 }
 
+exports.pranks = {
+	usage: "just type it",
+	description: "ulalalala",
+	process: function(bot, msg, suffix) {
+
+	}
+}
+
 var User = bookshelf.Model.extend({
 	tableName: 'users',
   	getLastRequest: function() {
@@ -46,6 +54,12 @@ var User = bookshelf.Model.extend({
 		this.save();
 	},
 
+	addTriviaPoint : function(point){
+		point = typeof point !== 'undefined' ? point : 1;
+		this.set('trivia_point', (this.get('trivia_point')+1));
+		this.save();
+	},
+
 	deductPoint : function(point){
 		point = typeof point !== 'undefined' ? point : 1;
 		this.set('point', (this.get('point')-1));
@@ -62,6 +76,15 @@ var User = bookshelf.Model.extend({
 
 	getLastCommand : function(cb) {
 		return cb(this.get("last_command"));
+	},
+
+	getUsername: function(){
+		return this.get('username');
+	},
+
+	putUsername: function(username){
+		this.set('username', username);
+		this.save();
 	}
 });
 
@@ -75,6 +98,9 @@ function getDiscordUser(user, cb) {
 			});
 		}
 		
+		if (usr.getUsername() == null){
+			usr.putUsername(user.username);
+		}
 	    return cb(usr);
 	}).catch(function(e){
 		

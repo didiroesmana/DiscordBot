@@ -23,7 +23,8 @@
     "querystring": "0.2.x",
     "sinon": "1.14.x",
     "tumblr.js": "0.0.x",
-    "underscore": "1.8.x"
+    "underscore": "1.8.x",
+    "uws": "^0.12.0"
   },
   "main": "discord_bot.js"
 }

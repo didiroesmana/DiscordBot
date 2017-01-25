@@ -1,7 +1,10 @@
 var fs = require('fs');
-var user = require('./plugins/User/user.js');
+var user = require('./plugins/User/user');
+var bookshelf = require('./lib/bookshelf');
+var Trivia = require('./plugins/Trivia/trivia');
 try {
 	var Discord = require("discord.js");
+	// bookshelf.init();
 } catch (e){
 	console.log(e.stack);
 	console.log(process.version);
@@ -224,7 +227,7 @@ bot.on("ready", function () {
 	console.log("Logged in! Serving in " + bot.guilds.array().length + " servers");
 	require("./plugins.js").init();
 	console.log("type "+Config.commandPrefix+"help in Discord for a commands list.");
-	bot.user.setGame(Config.commandPrefix+"help | " + bot.guilds.array().length +" Servers"); 
+	bot.user.setGame("type "+Config.commandPrefix+"help for info"); 
 });
 
 bot.on("disconnected", function () {
@@ -311,7 +314,7 @@ function checkMessageForCommand(msg, isEdit) {
 					}
         }
 		else if(cmd) {
-			if (msg.channel.id == Config.channel || msg.channel.type == "dm") {
+			if (msg.channel.id == Config.channel || msg.channel.type == "dm" || (Config.global_commands.indexOf(cmdTxt) >=0)) {
 				if(Permissions.checkPermission(msg.author,cmdTxt)){
 					try{
 						cmd.process(bot,msg,suffix,isEdit);
@@ -320,6 +323,7 @@ function checkMessageForCommand(msg, isEdit) {
 						if(Config.debug){
 							 msgTxt += "\n" + e.stack;
 						}
+						console.log(e);
 						msg.channel.sendMessage(msgTxt).then((message => message.delete(1000)));
 					}
 				} else {
@@ -347,6 +351,11 @@ function checkMessageForCommand(msg, isEdit) {
         	if (!isEdit && msg.author.bot === false) {
         		user.getDiscordUser(msg.author, function(usr) {
         			usr.addPoint();
+        		});
+        	}
+        	if (!isEdit && msg.author.bot === false && Trivia.isStarted() === true && msg.channel.id == Config.trivia_channel) {
+        		user.getDiscordUser(msg.author, function(usr) {
+        			Trivia.processChat(msg, user);
         		});
         	}
 		}
@@ -386,9 +395,11 @@ exports.addCommand = function(commandName, commandObject){
         console.log(err);
     }
 }
+
 exports.commandCount = function(){
     return Object.keys(commands).length;
 }
+
 if(AuthDetails.bot_token){
 	console.log("logging in with token");
 	bot.login(AuthDetails.bot_token);

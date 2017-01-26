@@ -125,10 +125,24 @@ function setGameQuestion(first,model, msg, cb) {
 		});
 		answered_counter= current_answers.length;
 		console.log(current_answers, answered_counter);
+
 	}).catch((e => console.log(e)));
 
-	var additional = first ? "**pertanyaan selanjutnya**\n":"";
-	msg.channel.sendMessage(additional+current_question.get('question')+" \npoint : **"+current_question.get('total_point')+"**").then((message => message.delete(10000)));
+	var additional = first ? "pertanyaan selanjutnya\n":"";
+	var pert = "```diff\n";
+	if (first) {
+		msg.channel.sendMessage('Memulai pertanyaan selanjutnya dalam 5 detik').then((message => message.delete(5000)));
+		setTimeout(function(){
+			pert +=additional+"+ "+current_question.get('question')+" \n- point : "+current_question.get('total_point')+"";
+			pert +="\n```";
+			msg.channel.sendMessage(pert).then((message => message.delete(60000)));
+		},5000);
+	} else {
+		pert +=additional+"+ "+current_question.get('question')+" \n- point : "+current_question.get('total_point')+"";
+		pert +="\n```";
+		msg.channel.sendMessage(pert).then((message => message.delete(60000)));
+	}
+	
 	setTimeout(function(){
 		setTimeout(function(){
 			if (!model.answered) {
@@ -147,7 +161,7 @@ function setGameQuestion(first,model, msg, cb) {
 				}
 
 		},5000);
-	},5000);
+	},10000);
 
 }
 

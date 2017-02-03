@@ -3,10 +3,11 @@ var Store = require("jfs");
 var db = new Store("userData");
 var serialize = require('node-serialize');
 var bookshelf = require('../../lib/bookshelf');
-
+var ModelBase = require('bookshelf-modelbase')(bookshelf);
 var exports = module.exports = {};
 
 module.exports.getDiscordUser = getDiscordUser;
+module.exports.getUsersByTriviaRank = getUsersByTriviaRank;
 module.exports.User = User;
 
 exports.commands = [
@@ -33,7 +34,7 @@ exports.pranks = {
 	}
 }
 
-var User = bookshelf.Model.extend({
+var User = ModelBase.extend({
 	tableName: 'users',
   	getLastRequest: function() {
 		return this.get('last_request');
@@ -105,4 +106,11 @@ function getDiscordUser(user, cb) {
 	}).catch(function(e){
 		
 	});
+}
+
+function getUsersByTriviaRank(cb){
+	bookshelf.plugin('pagination');
+	User.query(function(qb){qb.orderBy('trivia_point', 'DESC')}).fetchPage({pageSize:10}).then(function(results){
+		return cb(results);
+	}).catch(function(err){console.log(err)});
 }

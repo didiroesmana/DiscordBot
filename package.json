@@ -11,6 +11,7 @@
   },
   "license": "GPL-2.0",
   "dependencies": {
+    "async": "^2.1.4",
     "bookshelf": "^0.10.3",
     "discord.js": "11.0.x",
     "feedparser": "1.1.x",

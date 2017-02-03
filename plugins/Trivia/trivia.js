@@ -3,6 +3,7 @@ var User = require('../User/user');
 var bookshelf = require('../../lib/bookshelf');
 var ModelBase = require('bookshelf-modelbase')(bookshelf);
 var sync = require('synchronize');
+var async = require('async');
 try{
 	var Config = require("../../Config");
 } catch(e) {
@@ -87,10 +88,11 @@ function processChat(msg, user){
 							deferred();
 							current_question.shouldDeffer = false;
 						}
-						if (current_trivia_users[msg.author.username] !== undefined) {
-							current_trivia_users[msg.author.username] += data.get('point');
+						var tr_user = current_trivia_users.find(function(el, index){return el.user == msg.author.username});
+						if ( tr_user !== undefined) {
+							tr_user.point += data.get('point');
 						} else {
-							current_trivia_users[msg.author.username] = data.get('point');
+							current_trivia_users.push({user: msg.author.username, point: data.get('point')});
 						}
 						current_question.answered = true;
 					} catch(e) {
@@ -119,29 +121,32 @@ function setGameQuestion(first,model, msg, cb) {
 	current_question = model;
 	current_answers = [];
 	answered_counter =0;
+	var total_pertanyaan = 0;
 	model.answers().fetch().then(function(a){
 		a.forEach(function(b){
 			current_answers.push(b.get('answer').toLowerCase());
 		});
 		answered_counter= current_answers.length;
-		console.log(current_answers, answered_counter);
+		total_pertanyaan = answered_counter;
 
-	}).catch((e => console.log(e)));
-
-	var additional = first ? "pertanyaan selanjutnya\n":"";
-	var pert = "```diff\n";
-	if (first) {
-		msg.channel.sendMessage('Memulai pertanyaan selanjutnya dalam 5 detik').then((message => message.delete(5000)));
-		setTimeout(function(){
+		var additional = first ? "pertanyaan selanjutnya\n":"";
+		additional += "+ possible answer: "+total_pertanyaan+"\n";
+		var pert = "```diff\n";
+		if (first) {
+			msg.channel.sendMessage('Memulai pertanyaan selanjutnya dalam 5 detik').then((message => message.delete(5000)));
+			setTimeout(function(){
+				pert +=additional+"+ "+current_question.get('question')+" \n- point : "+current_question.get('total_point')+"";
+				pert +="\n```";
+				msg.channel.sendMessage(pert).then((message => message.delete(60000)));
+			},5000);
+		} else {
 			pert +=additional+"+ "+current_question.get('question')+" \n- point : "+current_question.get('total_point')+"";
 			pert +="\n```";
 			msg.channel.sendMessage(pert).then((message => message.delete(60000)));
-		},5000);
-	} else {
-		pert +=additional+"+ "+current_question.get('question')+" \n- point : "+current_question.get('total_point')+"";
-		pert +="\n```";
-		msg.channel.sendMessage(pert).then((message => message.delete(60000)));
-	}
+		}
+	}).catch((e => console.log(e)));
+
+	
 	
 	setTimeout(function(){
 		setTimeout(function(){
@@ -179,32 +184,61 @@ function startTriviaGame(models,msg){
 		};
 		started = false;
 		msg.channel.sendMessage("**Trivia selesai...**").then((message => message.delete(15000)));
-		// printTriviaSession(function(str){msg.channel.sendMessage(str)});
+		printTriviaSession(function(str){msg.channel.sendMessage(str)});
 		
-		current_trivia_users=[];
+		// current_trivia_users=[];
 	});
 }
 
 function printTriviaSession(cb){
-	// var str ="============================\n";
-	//     str+="Username              Point \n";
-	// var arr_usr = current_trivia_users.sort();
-	// var len = arr_usr.slice();
-	// var max = arr_usr.length;
-	// var count = 0;
-	// Object.keys(arr_usr).forEach(function(username) {
-	//   var point = arr_usr[username];
-	//   str+=username+"                "+point+"\n";
-	//   count++;
-	// 	console.log(arr_usr,username,point, count, max,len.length, len);
-	// 	if (count === max) {
-	// 		console.log(str);
- //    	return cb(str);
-	//   }
-	// });
-	// if (count === 0 && max ===0) {
-	// 	return cb(str);
-	// }
+	var str ="```diff";
+	    str+="\nSkor Trivia Pada Sesi Ini\n=========================\n";
+	    str+="- Username          Point \n";
+	
+	var arr_usr = current_trivia_users.sort(function(a,b){
+		return b.point - a.point;
+	});
+
+	var count = 0;
+	Object.keys(arr_usr).forEach(function(username) {
+	  var point = arr_usr[username].point;
+	  printSpasi((20 - arr_usr[username].user.length), function(spasi){
+	  	str+="+ "+ arr_usr[username].user+spasi+point+"\n";
+	  });
+	  count++;
+
+	  if (count === Object.keys(arr_usr).length) {
+			str +="```";
+    	return cb(str);
+	  }
+	});
+
+}
+
+function printTriviaRank(results, cb){
+	var str="```diff\n";
+	   str+="==============================\n";
+	   str+="-     HALL OF FAME TRIVIA     \n";
+	   str+="==============================\n";
+	async.each(results.models, function(user, callback){
+		printSpasi((25 - user.get('username').length), function(spasi){
+			str+="+ "+ user.get('username')+spasi+user.get('trivia_point')+"\n";
+		});
+		callback();
+	}, function(err){
+		str+="```";
+		return cb(str);
+	});
+}
+
+function printSpasi(length, cb){
+	var spasi = "";
+	for (var i = length - 1; i >= 0; i--) {
+		spasi += " ";
+		if (i == 0) {
+			return cb(spasi);
+		}
+	};
 }
 
 function addQuestionToGame(total,level,msg){
@@ -231,7 +265,8 @@ exports.commands = [
 	"trivia",
 	"atq",
 	"ata",
-	"ate"
+	"ate",
+	"trank"
 ]
 
 exports.trivia = {
@@ -249,6 +284,18 @@ exports.trivia = {
 		} else {
 			return addQuestionToGame(total,level,msg);
 		}
+	}
+}
+
+exports.trank = {
+	usage: "just type it",
+	description: "print best 10 trivia player",
+	process: function(bot, msg, suffix) {
+		User.getUsersByTriviaRank(function(results){
+			printTriviaRank(results, function(str){
+				return msg.channel.sendMessage(str);
+			});
+		});
 	}
 }
 

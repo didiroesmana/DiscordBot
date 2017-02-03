@@ -4,12 +4,13 @@ A chat bot for discord app based off <a href="https://github.com/hydrabolt/disco
 fork off <a href="https://github.com/chalda/DiscordBot">DiscordBot</a>
 
 # Features
-- i!whodrops
-- i!whereis
+- !whodrops
+- !whereis
+- !point
+- Trivia System
 
 # TO DO
-- i!beli
-- i!jual
-- Trivia System ?
+- !beli
+- !jual
 
 If you still need help join us on [discord.](https://discordapp.com/invite/V73tWWE)

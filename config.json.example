@@ -1,0 +1,35 @@
+{
+  "debug": false,
+  "commandPrefix": "!",
+  "channel": "274165730935570442",
+  "trivia_channel": "274165730935570442",
+  "urlApi": "url_for_db_idrowiki_api",
+  "authKeyApi": "key_for_auth_id_ro_wiki",
+  "loadPlugin": [
+    "Idrowiki",
+    "Urban Dictionary",
+    "Giphy",
+    "Wikipedia",
+    "User",
+    "leet",
+    "Trivia"
+  ],
+  "db": {
+    "host": "mysql_host",
+    "user": "mysql_user",
+    "password": "mysql_pass",
+    "name": "mysql_db_name"
+  },
+  "global_commands": [
+    "point",
+    "pilih",
+    "mii",
+    "wii",
+    "whodrops",
+    "whereis",
+    "atq",
+    "ata",
+    "ate",
+    "trank"
+  ]
+}

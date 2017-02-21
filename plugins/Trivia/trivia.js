@@ -133,21 +133,19 @@ function setGameQuestion(first,model, msg, cb) {
 		additional += "+ possible answer: "+total_pertanyaan+"\n";
 		var pert = "```diff\n";
 		if (first) {
-			msg.channel.sendMessage('Memulai pertanyaan selanjutnya dalam 5 detik').then((message => message.delete(5000)));
+			msg.channel.sendMessage('Memulai pertanyaan selanjutnya dalam 7 detik').then((message => message.delete(5000)));
 			setTimeout(function(){
 				pert +=additional+"+ "+current_question.get('question')+" \n- point : "+current_question.get('total_point')+"";
 				pert +="\n```";
 				msg.channel.sendMessage(pert).then((message => message.delete(60000)));
-			},5000);
+			},7000);
 		} else {
 			pert +=additional+"+ "+current_question.get('question')+" \n- point : "+current_question.get('total_point')+"";
 			pert +="\n```";
 			msg.channel.sendMessage(pert).then((message => message.delete(60000)));
-		}
-	}).catch((e => console.log(e)));
 
-	
-	
+		}	
+	}).catch((e => console.log(e)));
 	setTimeout(function(){
 		setTimeout(function(){
 			if (!model.answered) {
@@ -218,7 +216,7 @@ function printTriviaSession(cb){
 function printTriviaRank(results, cb){
 	var str="```diff\n";
 	   str+="==============================\n";
-	   str+="-     HALL OF FAME TRIVIA     \n";
+	   str+="-     HALL OF FAME TRIVIA    -\n";
 	   str+="==============================\n";
 	async.each(results.models, function(user, callback){
 		printSpasi((25 - user.get('username').length), function(spasi){

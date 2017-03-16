@@ -232,7 +232,7 @@ function searchMapList(id, cb) {
 		if (error) throw new Error(error);
 
 		res = JSON.parse(body);
-		// get first macthed name
+		// get first matched name
 		var mobList = "```\n";
 		if (res.moblist !== undefined && res.moblist) {
 			for (var i = 0; i < res.moblist.length; i++) {
@@ -257,7 +257,7 @@ function searchMap(nama, cb) {
 		if (error) throw new Error(error);
 
 		res = JSON.parse(body);
-		// get first macthed name
+		// get first matched name
 		if (res.found >= 1) {
 			return cb(res.maplist);
 		}
@@ -284,7 +284,7 @@ function monsterMaplist(id, cb) {
 		if (error) throw new Error(error);
 
 		res = JSON.parse(body);
-		// get first macthed name
+		// get first matched name
 		var mapList = "```\n";
 		if (res.map !== undefined && res.map) {
 			for (var i = 0; i < res.map.length; i++) {
@@ -309,7 +309,7 @@ function searchMonster(nama, cb) {
 		if (error) throw new Error(error);
 
 		res = JSON.parse(body);
-		// get first macthed name
+		// get first matched name
 		if (res.found >= 1) {
 			return cb(res.moblist);
 		}
@@ -323,7 +323,7 @@ function searchItem(nama, cb) {
 		if (error) throw new Error(error);
 
 		res = JSON.parse(body);
-		// get first macthed name
+		// get first matched name
 		if (res.found >= 1) {
 			return cb(res.itemlist);
 		}
@@ -337,7 +337,7 @@ function searchItemList(id, cb) {
 		if (error) throw new Error(error);
 
 		res = JSON.parse(body);
-		// get first macthed name
+		// get first matched name
 		var mobList = "```\n";
 		if (res.moblist !== undefined && res.moblist) {
 			for (var i = 0; i < res.moblist.length; i++) {

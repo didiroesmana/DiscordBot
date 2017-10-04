@@ -2,6 +2,7 @@ var fs = require('fs');
 var user = require('./plugins/User/user');
 var bookshelf = require('./lib/bookshelf');
 var Trivia = require('./plugins/Trivia/trivia');
+var IdrowikiCJB = require('./plugins/IdrowikiCJB/idrowikicjb');
 try {
 	var Discord = require("discord.js");
 	// bookshelf.init();
@@ -358,6 +359,34 @@ function checkMessageForCommand(msg, isEdit) {
         			Trivia.processChat(msg, user);
         		});
         	}
+
+			if (!isEdit && msg.author.bot === false) {
+				if (Config.fjb_channel_chaos.find(function(e){return e == msg.channel.id}) !== undefined) {
+					user.getDiscordUser(msg.author, function(usr) {
+						IdrowikiCJB.processCJBScroll(msg, user, 'Chaos');
+					});
+				}
+				if (Config.fjb_channel_loki.find(function(e){return e == msg.channel.id}) !== undefined) {
+					user.getDiscordUser(msg.author, function(usr) {
+						IdrowikiCJB.processCJBScroll(msg, user, 'Loki');
+					});
+				}
+				if (Config.fjb_channel_midgard.find(function(e){return e == msg.channel.id}) !== undefined) {
+					user.getDiscordUser(msg.author, function(usr) {
+						IdrowikiCJB.processCJBScroll(msg, user, 'Midgard');
+					});
+				}
+				if (Config.fjb_channel_asgard.find(function(e){return e == msg.channel.id}) !== undefined) {
+					user.getDiscordUser(msg.author, function(usr) {
+						IdrowikiCJB.processCJBScroll(msg, user, 'Asgard');
+					});
+				}
+				if (Config.fjb_channel_valhalla.find(function(e){return e == msg.channel.id}) !== undefined) {
+					user.getDiscordUser(msg.author, function(usr) {
+						IdrowikiCJB.processCJBScroll(msg, user, 'Valhalla');
+					});
+				}
+			}
 		}
     }
 }

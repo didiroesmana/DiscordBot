@@ -20,6 +20,23 @@
     "password": "mysql_pass",
     "name": "mysql_db_name"
   },
+  "fjb_urlApi": "url_to_idrowiki_cjb",
+  "fjb_authKeyApi": "api_key_for_idrowiki_cjb",
+  "fjb_channel_chaos" : [
+    "0"
+  ],
+  "fjb_channel_loki" : [
+    "0"
+  ],
+  "fjb_channel_midgard" : [
+    "0"
+  ],
+  "fjb_channel_asgard" : [
+    "0"
+  ],
+  "fjb_channel_valhalla" : [
+    "0"
+  ],
   "global_commands": [
     "point",
     "pilih",

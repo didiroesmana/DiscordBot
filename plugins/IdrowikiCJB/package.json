@@ -1,0 +1,7 @@
+{
+  "main": "idrowikicjb.js",
+  "dependencies": {
+    "request": ">=2.58.0",
+    "jfs" : "~0.2.6"
+  }
+}

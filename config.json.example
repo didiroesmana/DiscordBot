@@ -22,10 +22,7 @@
   },
   "fjb_urlApi": "url_to_idrowiki_cjb",
   "fjb_authKeyApi": "api_key_for_idrowiki_cjb",
-  "fjb_channel_chaos" : [
-    "0"
-  ],
-  "fjb_channel_loki" : [
+  "fjb_channel_thor" : [
     "0"
   ],
   "fjb_channel_midgard" : [

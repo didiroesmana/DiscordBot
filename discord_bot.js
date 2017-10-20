@@ -361,27 +361,22 @@ function checkMessageForCommand(msg, isEdit) {
         	}
 
 			if (!isEdit && msg.author.bot === false) {
-				if (Config.fjb_channel_chaos.find(function(e){return e == msg.channel.id}) !== undefined) {
+				if (Config.fjb_channel_thor.find(function(e){return e == msg.channel.id}) !== undefined) {
 					user.getDiscordUser(msg.author, function(usr) {
-						IdrowikiCJB.processCJBScroll(msg, user, 'Chaos');
+						IdrowikiCJB.processCJBScroll(msg, user, 'Thor');
 					});
 				}
-				if (Config.fjb_channel_loki.find(function(e){return e == msg.channel.id}) !== undefined) {
-					user.getDiscordUser(msg.author, function(usr) {
-						IdrowikiCJB.processCJBScroll(msg, user, 'Loki');
-					});
-				}
-				if (Config.fjb_channel_midgard.find(function(e){return e == msg.channel.id}) !== undefined) {
+				else if (Config.fjb_channel_midgard.find(function(e){return e == msg.channel.id}) !== undefined) {
 					user.getDiscordUser(msg.author, function(usr) {
 						IdrowikiCJB.processCJBScroll(msg, user, 'Midgard');
 					});
 				}
-				if (Config.fjb_channel_asgard.find(function(e){return e == msg.channel.id}) !== undefined) {
+				else if (Config.fjb_channel_asgard.find(function(e){return e == msg.channel.id}) !== undefined) {
 					user.getDiscordUser(msg.author, function(usr) {
 						IdrowikiCJB.processCJBScroll(msg, user, 'Asgard');
 					});
 				}
-				if (Config.fjb_channel_valhalla.find(function(e){return e == msg.channel.id}) !== undefined) {
+				else if (Config.fjb_channel_valhalla.find(function(e){return e == msg.channel.id}) !== undefined) {
 					user.getDiscordUser(msg.author, function(usr) {
 						IdrowikiCJB.processCJBScroll(msg, user, 'Valhalla');
 					});
